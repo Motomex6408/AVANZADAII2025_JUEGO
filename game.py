@@ -37,19 +37,23 @@ asset_playerimg = resource_path('assets/images/Nave.png')
 playerimg = pygame.image.load(asset_playerimg)
 
 # Cargar imagen del jugador 2
-asset_playerimg = resource_path('assets/images/Nave2.png')
-playerimg = pygame.image.load(asset_playerimg)
+asset_playerimg2 = resource_path('assets/images/Nave2.png')
+playerimg2 = pygame.image.load(asset_playerimg2)
 
-# Cargar imagen de la bala 
+# Cargar imagen de la bala enemiga
 asset_bulletimg = resource_path('assets/images/bullet.png')
 bulletimg = pygame.image.load(asset_bulletimg)
 
+# Cargar imagen de la bala aliada
+asset_bulletimg2 = resource_path('assets/images/bullet2.jpg')
+bulletimg2 = pygame.image.load(asset_bulletimg2)
+
 # Cargar fuente para texto de game over
-asset_over_font = resource_path('assets/fonts/RAVIE.TTF')
+asset_over_font = resource_path('assets/fonts/StarJediHollow-A4lL.ttf')
 over_font = pygame.font.Font(asset_over_font, 40)
 
 # Cargar fuente para texto de puntaje
-asset_font = resource_path('assets/fonts/comicbd.ttf')
+asset_font = resource_path('assets/fonts/StarJediHollow-A4lL.ttf')
 font = pygame.font.Font(asset_font, 32)
 
 # Establecer el título de la ventana
@@ -122,7 +126,7 @@ def enemy(x, y, i):
 def fire_bullet(x, y):
     global bullet_state
     bullet_state = "fire"
-    screen.blit(bulletimg, (x + 16, y + 10))
+    screen.blit(bulletimg2, (x + 16, y + 10))
 
 # Función para verificar si hubo colisión entre la bala y el enemigo
 def isCollision(enemyX, enemyY, bulletX, bulletY):
@@ -140,7 +144,7 @@ def game_over_text():
     y_offset = 0  # Desplazamiento inicial en y
 
     for line in lines:
-        over_text = over_font.render(line, True, (172, 0, 16))
+        over_text = over_font.render(line, True, (255, 255, 0))
         text_rect = over_text.get_rect(center=(screen_width // 2, (screen_height // 2) + y_offset))
         screen.blit(over_text, text_rect)
         y_offset += 40  # Aumenta el desplazamiento en Y para la siguiente línea
@@ -154,3 +158,85 @@ def game_introduction():
         " ",
         
     ]
+    
+# Función principal del juego
+def gameloop():
+    global score, playerX, playerx_change, bulletX, bulletY, bullet_state
+    in_game = True
+    while in_game:
+        # Limpiar la pantalla
+        screen.fill((0, 0, 0))
+        screen.blit(background, (0, 0))
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                in_game = False
+                pygame.quit()
+                quit()
+
+            if event.type == pygame.KEYDOWN:
+                # Maneja la movilidad del jugador y la bala
+                if event.key == pygame.K_LEFT:
+                    playerx_change = -5
+
+                if event.key == pygame.K_RIGHT:
+                    playerx_change = 5
+
+                if event.key == pygame.K_SPACE:
+                    if bullet_state == "ready":
+                        bulletX = playerX
+                        fire_bullet(bulletX, bulletY)
+
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
+                    playerx_change = 0
+
+        # Aca se actualiza la posicion del jugador
+        playerX += playerx_change
+
+        if playerX <= 0:
+            playerX = 0
+        elif playerX >= 736:
+            playerX = 736
+
+        # Bucle que se ejecuta para cada enemigo
+        for i in range(no_of_enemies):
+            if enemyY[i] > 440:
+                for j in range(no_of_enemies):
+                    enemyY[j] = 2000
+                game_over_text()
+                break
+
+            enemyX[i] += enemyX_change[i]
+            if enemyX[i] <= 0:
+                enemyX_change[i] = 5
+                enemyY[i] += enemyY_change[i]
+            elif enemyX[i] >= 736:
+                enemyX_change[i] = -5
+                enemyY[i] += enemyY_change[i]
+
+            # Aca se verifica si hay colision entre el enemigo y la bala   
+            collision = isCollision(enemyX[i], enemyY[i], bulletX, bulletY)
+            if collision:
+                bulletY = 480
+                bullet_state = "ready"
+                score += 1
+                enemyX[i] = random.randint(0, 736)
+                enemyY[i] = random.randint(0, 150)
+
+            enemy(enemyX[i], enemyY[i], i)
+
+        if bulletY < 0:
+            bulletY = 454
+            bullet_state = "ready"
+        if bullet_state == "fire":
+            fire_bullet(bulletX, bulletY)
+            bulletY -= bulletY_change
+
+        player(playerX, playerY)
+        show_score()
+
+        pygame.display.update()
+        clock.tick(120)
+
+gameloop()
