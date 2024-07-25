@@ -32,6 +32,10 @@ icon = pygame.image.load(asset_icon)
 asset_sound = resource_path('assets/audios/background_music2.mp3')
 background_sound = pygame.mixer.music.load(asset_sound)
 
+#  Cargar sonido de disparo
+asset_blast = resource_path('assets/audios/blast.mp3')
+blast_sound = pygame.mixer.Sound(asset_blast)
+
 # Cargar imagen del jugador
 asset_playerimg = resource_path('assets/images/Nave.png')
 playerimg = pygame.image.load(asset_playerimg)
@@ -126,6 +130,7 @@ def enemy(x, y, i):
 def fire_bullet(x, y):
     global bullet_state
     bullet_state = "fire"
+    blast_sound.play()
     screen.blit(bulletimg2, (x + 16, y + 10))
 
 # Función para verificar si hubo colisión entre la bala y el enemigo
