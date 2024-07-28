@@ -3,6 +3,7 @@ import random
 import math
 import sys
 import os
+import time
 
 # Inicializar el game
 pygame.init()
@@ -32,7 +33,7 @@ icon = pygame.image.load(asset_icon)
 asset_sound = resource_path('assets/audios/background_music2.mp3')
 background_sound = pygame.mixer.music.load(asset_sound)
 
-#  Cargar sonido de disparo
+# Cargar sonido de disparo
 asset_blast = resource_path('assets/audios/blast.mp3')
 blast_sound = pygame.mixer.Sound(asset_blast)
 
@@ -83,7 +84,13 @@ enemyX = []
 enemyY = []
 enemyX_change = []
 enemyY_change = []
-no_of_enemies = 10
+enemy_bulletX = []
+enemy_bulletY = []
+enemy_bulletY_change = []
+enemy_bullet_state = []
+enemy_last_shot_time = []
+enemy_shot_interval = []
+no_of_enemies = 6
 
 # Se inicializan las variables para guardar las posiciones de los enemigos
 for i in range(no_of_enemies):
@@ -102,6 +109,16 @@ for i in range(no_of_enemies):
     # Se establece la velocidad de movimiento del enemigo en X y en Y
     enemyX_change.append(5)
     enemyY_change.append(20)
+
+    # Inicializar la posición de la bala del enemigo
+    enemy_bulletX.append(enemyX[i])
+    enemy_bulletY.append(enemyY[i])
+    enemy_bulletY_change.append(3)  # Reducir la velocidad de las balas enemigas
+    enemy_bullet_state.append("ready")
+    
+    # Inicializar el tiempo del último disparo y el intervalo de disparo para cada enemigo
+    enemy_last_shot_time.append(time.time())
+    enemy_shot_interval.append(random.uniform(2, 5))  # Aumentar el tiempo mínimo entre disparos
 
 # Se inicializan las variables para guardar la posición de la bala
 bulletX = 0
@@ -126,7 +143,7 @@ def player(x, y):
 def enemy(x, y, i):
     screen.blit(enemyimg[i], (x, y))
 
-# Función para disparar la bala
+# Función para disparar la bala del jugador
 def fire_bullet(x, y):
     global bullet_state
     bullet_state = "fire"
@@ -154,16 +171,6 @@ def game_over_text():
         screen.blit(over_text, text_rect)
         y_offset += 40  # Aumenta el desplazamiento en Y para la siguiente línea
 
-#Funcion para introduccion del juego
-def game_introduction():
-    lines = [
-        "Es periodo de conflicto",
-        "La galaxia ha sido atacada",
-        "Palpatine ha ejecutado la orden 66",
-        " ",
-        
-    ]
-    
 # Función principal del juego
 def gameloop():
     global score, playerX, playerx_change, bulletX, bulletY, bullet_state
@@ -220,7 +227,7 @@ def gameloop():
                 enemyX_change[i] = -5
                 enemyY[i] += enemyY_change[i]
 
-            # Aca se verifica si hay colision entre el enemigo y la bala   
+            # Aca se verifica si hay colision entre el enemigo y la bala del jugador
             collision = isCollision(enemyX[i], enemyY[i], bulletX, bulletY)
             if collision:
                 bulletY = 480
