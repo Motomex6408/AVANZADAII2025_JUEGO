@@ -163,6 +163,11 @@ def isCollision(enemyX, enemyY, bulletX, bulletY):
     distance = math.sqrt((math.pow(enemyX - bulletX, 2)) + (math.pow(enemyY - bulletY, 2)))
     return distance < 27
 
+# Función para verificar si hubo colisión entre la bala enemiga y el jugador
+def isPlayerHit(playerX, playerY, bulletX, bulletY):
+    distance = math.sqrt((math.pow(playerX - bulletX, 2)) + (math.pow(playerY - bulletY, 2)))
+    return distance < 27
+ 
 # Función para mostrar el texto de game over
 def game_over_text():
     lines = [
@@ -250,6 +255,23 @@ def gameloop():
                 fire_enemy_bullet(enemyX[i], enemyY[i], i)
                 enemy_last_shot_time[i] = current_time
                 enemy_shot_interval[i] = random.uniform(2, 5)  # Aumentar el tiempo mínimo entre disparos
+
+            if enemy_bullet_state[i] == "fire":
+                screen.blit(bulletimg, (enemy_bulletX[i], enemy_bulletY[i]))
+                enemy_bulletY[i] += enemy_bulletY_change[i]
+
+            if enemy_bulletY[i] > 600:
+                enemy_bulletY[i] = enemyY[i]
+                enemy_bullet_state[i] = "ready"
+
+            # Verificar colisión entre bala enemiga y jugador
+            player_hit = isPlayerHit(playerX, playerY, enemy_bulletX[i], enemy_bulletY[i])
+            if player_hit:
+                for j in range(no_of_enemies):
+                    enemyY[j] = 2000
+                game_over_text()
+                in_game = False
+                break
 
             enemy(enemyX[i], enemyY[i], i)
 
