@@ -243,6 +243,13 @@ def gameloop():
                 score += 1
                 enemyX[i] = random.randint(0, 736)
                 enemyY[i] = random.randint(0, 150)
+                
+            # Enemigos disparan balas
+            current_time = time.time()
+            if enemy_bullet_state[i] == "ready" and current_time - enemy_last_shot_time[i] > enemy_shot_interval[i]:
+                fire_enemy_bullet(enemyX[i], enemyY[i], i)
+                enemy_last_shot_time[i] = current_time
+                enemy_shot_interval[i] = random.uniform(2, 5)  # Aumentar el tiempo mínimo entre disparos
 
             enemy(enemyX[i], enemyY[i], i)
 
