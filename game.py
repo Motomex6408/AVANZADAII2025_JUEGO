@@ -149,6 +149,14 @@ def fire_bullet(x, y):
     bullet_state = "fire"
     blast_sound.play()
     screen.blit(bulletimg2, (x + 16, y + 10))
+    
+# Función para disparar la bala del enemigo
+def fire_enemy_bullet(x, y, i):
+    global enemy_bullet_state
+    enemy_bulletX[i] = x  # Asegurarse de que la bala aparezca desde la posición actual del enemigo
+    enemy_bullet_state[i] = "fire"
+    blast_sound.play()
+    screen.blit(bulletimg, (x + 16, y + 10))
 
 # Función para verificar si hubo colisión entre la bala y el enemigo
 def isCollision(enemyX, enemyY, bulletX, bulletY):
