@@ -25,6 +25,14 @@ def resource_path(relative_path):
 asset_background = resource_path('assets/images/background.png')
 background = pygame.image.load(asset_background)
 
+# Cargar imagen del titulo principal
+asset_title = resource_path('assets/images/titulo_principal.jpeg')
+title = pygame.image.load(asset_title)
+
+# Cargar imagen de seleccion de personajes
+asset_seleccion = resource_path('assets/images/selección_de_personajes.jpeg')
+seleccion = pygame.image.load(asset_seleccion)
+
 # Cargar icono de ventana
 asset_icon = resource_path('assets/images/icon.png')
 icon = pygame.image.load(asset_icon)
@@ -41,6 +49,14 @@ blast_sound = pygame.mixer.Sound(asset_blast)
 asset_playerimg1 = resource_path('assets/images/Nave.png')
 playerimg1 = pygame.image.load(asset_playerimg1)
 
+# Cargar personaje del personaje Weddom
+asset_playercharacter1 = resource_path('assets/images/Aldaris.png')
+playercharacter1 = pygame.image.load(asset_playercharacter1)
+
+# Cargar personaje de la personaje Star
+asset_playercharacter2 = resource_path('assets/images/Star.png')
+playercharacter2 = pygame.image.load(asset_playercharacter2)
+
 # Imagen del jugador 2 (si tienes un segundo jugador)
 asset_playerimg2 = resource_path('assets/images/nave2.png')
 playerimg2 = pygame.image.load(asset_playerimg2)
@@ -54,15 +70,15 @@ asset_bulletimg = resource_path('assets/images/bullet.png')
 bulletimg = pygame.image.load(asset_bulletimg)
 
 # Cargar fuente para texto de game over
-asset_over_font = resource_path('assets/fonts/StarJediHollow-A4lL.ttf')
+asset_over_font = resource_path('assets/fonts/StarJedi-DGRW.ttf')
 over_font = pygame.font.Font(asset_over_font, 40)
 
 # Cargar fuente para texto de puntaje
-asset_font = resource_path('assets/fonts/StarJediHollow-A4lL.ttf')
+asset_font = resource_path('assets/fonts/StarJedi-DGRW.ttf')
 font = pygame.font.Font(asset_font, 32)
 
 # Establecer el título de la ventana
-pygame.display.set_caption("The Last One of Them")
+pygame.display.set_caption("Last One of Them")
 
 # Establecer el icono de la ventana
 pygame.display.set_icon(icon)
@@ -95,14 +111,24 @@ no_of_enemies = 6
 # Se inicializan las variables para guardar las posiciones de los enemigos
 for i in range(no_of_enemies):
     enemy1 = resource_path('assets/images/enemy1.png')
-    enemyimg.append(pygame.image.load(enemy1))
+    enemy2 = resource_path('assets/images/enemy2.png')
+    enemy3 = resource_path('assets/images/enemy3.png')
+
+    # Alternar entre las imágenes de los enemigos
+    if i % 3 == 0:
+        enemyimg.append(pygame.image.load(enemy1))
+    elif i % 3 == 1:
+        enemyimg.append(pygame.image.load(enemy2))
+    else:
+        enemyimg.append(pygame.image.load(enemy3))
+
     enemyX.append(random.randint(0, 736))
     enemyY.append(random.randint(0, 150))
-    enemyX_change.append(5)
+    enemyX_change.append(7)  # Aumentar la velocidad del enemigo
     enemyY_change.append(20)
     enemy_bulletX.append(enemyX[i])
     enemy_bulletY.append(enemyY[i])
-    enemy_bulletY_change.append(3)
+    enemy_bulletY_change.append(8)
     enemy_bullet_state.append("ready")
     enemy_last_shot_time.append(time.time())
     enemy_shot_interval.append(random.uniform(2, 5))
@@ -111,7 +137,7 @@ for i in range(no_of_enemies):
 bulletX = 0
 bulletY = 480
 bulletX_change = 0
-bulletY_change = 10
+bulletY_change = 13
 bullet_state = "ready"
 
 # Se inicializa la puntuación en 0
@@ -174,20 +200,19 @@ def game_over_text():
         screen.blit(over_text, text_rect)
         y_offset += 40  # Aumenta el desplazamiento en y para la siguiente línea
 
-
 # Función del menú principal
 def game_start():
     menu = True
     while menu:
         screen.fill((0, 0, 0))
-        screen.blit(background, (0, 0))
-        title_font = pygame.font.Font(asset_font, 64)
-        title_text = title_font.render("The Last One of Them", True, (255, 255, 0))
-        title_rect = title_text.get_rect(center=(screen_width // 2, screen_height // 4))
-        screen.blit(title_text, title_rect)
+        screen.blit(title, (0, 0))
+        # title_font = pygame.font.Font(asset_font, 50)
+        # title_text = title_font.render("The Last One of Them", True, (255, 255, 0))
+        # title_rect = title_text.get_rect(center=(screen_width // 2, screen_height // 4))
+        # screen.blit(title_text, title_rect)
 
         start_font = pygame.font.Font(asset_font, 32)
-        start_text = start_font.render("Press ENTER to Start", True, (255, 255, 255))
+        start_text = start_font.render("ENTER para empezar", True, (0,0,0))
         start_rect = start_text.get_rect(center=(screen_width // 2, screen_height // 2))
         screen.blit(start_text, start_rect)
 
@@ -198,103 +223,171 @@ def game_start():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_RETURN:
                     menu = False
-                    gameloop()
+                    character_selection()
 
         pygame.display.update()
         clock.tick(15)
 
-# Bucle principal del juego
-def gameloop():
-    global playerX, playerY, playerx_change, bulletX, bulletY, bullet_state, score, enemyX, enemyY, enemy_bulletX, enemy_bulletY, enemy_bullet_state
-
-    in_game = True
-    while in_game:
+# Función para la selección de personajes
+def character_selection():
+    selected = 0
+    select = True
+    
+    # Variable para el nombre del personaje
+    while select:
         screen.fill((0, 0, 0))
-        screen.blit(background, (0, 0))
+        screen.blit(seleccion, (0, 0))
+        
+        title_font = pygame.font.Font(asset_font, 64)
+        title_text = title_font.render("Elige tu personaje", True, (255, 255, 0))
+        title_rect = title_text.get_rect(center=(screen_width // 2, screen_height // 4))
+        screen.blit(title_text, title_rect)
+
+        ships = [playercharacter1, playercharacter2]
+        ship_names = ["Weddom", "Star"]
+
+        for i, ship in enumerate(ships):
+            x_pos = screen_width // 2 + (i - 1) * 200
+            y_pos = screen_height // 2
+
+            if i == selected:
+                border_color = (0, 0, 255)
+                name_color = (0, 0, 255)
+            else:
+                border_color = (255, 255, 255)
+                name_color = (255, 255, 255)
+
+            # Rectángulo del borde alrededor de la imagen seleccionada
+            border_rect = ship.get_rect(center=(x_pos, y_pos))
+            pygame.draw.rect(screen, border_color, border_rect.inflate(20, 20), 3)
+
+            # Imagen del personaje
+            screen.blit(ship, border_rect)
+
+            # Nombre del personaje
+            name_font = pygame.font.Font(asset_font, 32)
+            name_text = name_font.render(ship_names[i], True, name_color)
+            name_rect = name_text.get_rect(center=(x_pos, y_pos + 70))
+            screen.blit(name_text, name_rect)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 quit()
-
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT:
-                    playerx_change = -5
-                if event.key == pygame.K_RIGHT:
-                    playerx_change = 5
-                if event.key == pygame.K_SPACE:
-                    if bullet_state == "ready":
-                        bulletX = playerX
-                        fire_bullet(bulletX, bulletY)
-
-            if event.type == pygame.KEYUP:
-                if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
-                    playerx_change = 0
-
-        playerX += playerx_change
-        if playerX <= 0:
-            playerX = 0
-        elif playerX >= 736:
-            playerX = 736
-
-        for i in range(no_of_enemies):
-            if enemyY[i] > 440:
-                for j in range(no_of_enemies):
-                    enemyY[j] = 2000
-                game_over_text()
-                in_game = False
-                break
-
-            enemyX[i] += enemyX_change[i]
-            if enemyX[i] <= 0:
-                enemyX_change[i] = 5
-                enemyY[i] += enemyY_change[i]
-            elif enemyX[i] >= 736:
-                enemyX_change[i] = -5
-                enemyY[i] += enemyY_change[i]
-
-            collision = isCollision(enemyX[i], enemyY[i], bulletX, bulletY)
-            if collision:
-                bulletY = 480
-                bullet_state = "ready"
-                score += 1
-                enemyX[i] = random.randint(0, 736)
-                enemyY[i] = random.randint(0, 150)
-
-            current_time = time.time()
-            if enemy_bullet_state[i] == "ready" and current_time - enemy_last_shot_time[i] > enemy_shot_interval[i]:
-                fire_enemy_bullet(enemyX[i], enemyY[i], i)
-                enemy_last_shot_time[i] = current_time
-                enemy_shot_interval[i] = random.uniform(2, 5)
-            if enemy_bullet_state[i] == "fire":
-                screen.blit(bulletimg, (enemy_bulletX[i], enemy_bulletY[i]))
-                enemy_bulletY[i] += enemy_bulletY_change[i]
-
-            if enemy_bulletY[i] > 600:
-                enemy_bulletY[i] = enemyY[i]
-                enemy_bullet_state[i] = "ready"
-
-            player_hit = isPlayerHit(playerX, playerY, enemy_bulletX[i], enemy_bulletY[i])
-            if player_hit:
-                for j in range(no_of_enemies):
-                    enemyY[j] = 2000
-                game_over_text()
-                in_game = False
-                break
-
-            enemy(enemyX[i], enemyY[i], i)
-
-        if bulletY < 0:
-            bulletY = 480
-            bullet_state = "ready"
-        if bullet_state == "fire":
-            fire_bullet(bulletX, bulletY)
-            bulletY -= bulletY_change
-
-        player(playerX, playerY)
-        show_score()
+                    selected = (selected - 1) % len(ships)
+                elif event.key == pygame.K_RIGHT:
+                    selected = (selected + 1) % len(ships)
+                elif event.key == pygame.K_RETURN:
+                    select = False
 
         pygame.display.update()
-        clock.tick(120)
+        clock.tick(15)
+    
+    global playerimg
+    playerimg = playerimg1 if selected == 0 else playerimg2
 
+# Bucle principal del juego
 game_start()
+running = True
+while running:
+    # Color de fondo
+    screen.fill((0, 0, 0))
+
+    # Fondo del juego
+    screen.blit(background, (0, 0))
+
+    # Eventos del juego
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_LEFT:
+                playerx_change = -7
+            if event.key == pygame.K_RIGHT:
+                playerx_change = 7
+            if event.key == pygame.K_SPACE:
+                if bullet_state == "ready":
+                    bulletX = playerX
+                    fire_bullet(bulletX, bulletY)
+        if event.type == pygame.KEYUP:
+            if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
+                playerx_change = 0
+
+    playerX += playerx_change
+
+    # Limitar el movimiento del jugador dentro de los bordes de la pantalla
+    if playerX <= 0:
+        playerX = 0
+    elif playerX >= 736:
+        playerX = 736
+
+    # Movimiento del enemigo
+    for i in range(no_of_enemies):
+        # Fin del juego
+        if enemyY[i] > 440:
+            for j in range(no_of_enemies):
+                enemyY[j] = 2000
+            game_over_text()
+            break
+
+        enemyX[i] += enemyX_change[i]
+        if enemyX[i] <= 0:
+            enemyX_change[i] = 7
+            enemyY[i] += enemyY_change[i]
+        elif enemyX[i] >= 736:
+            enemyX_change[i] = -7
+            enemyY[i] += enemyY_change[i]
+
+        # Disparar balas enemigas con intervalos aleatorios
+        current_time = time.time()
+        if current_time - enemy_last_shot_time[i] > enemy_shot_interval[i]:
+            fire_enemy_bullet(enemyX[i], enemyY[i], i)
+            enemy_last_shot_time[i] = current_time
+            enemy_shot_interval[i] = random.uniform(2, 5)  # Ajustar el intervalo
+
+        # Movimiento de la bala enemiga
+        if enemy_bullet_state[i] == "fire":
+            screen.blit(bulletimg, (enemy_bulletX[i], enemy_bulletY[i]))
+            enemy_bulletY[i] += enemy_bulletY_change[i]
+
+        # Resetear la bala enemiga si sale de la pantalla
+        if enemy_bulletY[i] >= screen_height:
+            enemy_bulletY[i] = enemyY[i]
+            enemy_bullet_state[i] = "ready"
+
+        # Verificar si el jugador fue golpeado
+        if isPlayerHit(playerX, playerY, enemy_bulletX[i], enemy_bulletY[i]):
+            for j in range(no_of_enemies):
+                enemyY[j] = 2000
+            game_over_text()
+            running = False
+            break
+
+        # Colisión entre bala y enemigo
+        collision = isCollision(enemyX[i], enemyY[i], bulletX, bulletY)
+        if collision:
+            bulletY = 480
+            bullet_state = "ready"
+            score += 1
+            enemyX[i] = random.randint(0, 736)
+            enemyY[i] = random.randint(50, 150)
+
+        enemy(enemyX[i], enemyY[i], i)
+
+    # Movimiento de la bala del jugador
+    if bulletY <= 0:
+        bulletY = 480
+        bullet_state = "ready"
+
+    if bullet_state == "fire":
+        fire_bullet(bulletX, bulletY)
+        bulletY -= bulletY_change
+
+    player(playerX, playerY)
+    show_score()
+    pygame.display.update()
+    clock.tick(60)
+
+pygame.quit()
