@@ -4,9 +4,6 @@ import math
 import sys
 import os
 import time
-import threading
-from moviepy.editor import VideoFileClip
-
 
 # Inicializar el juego
 pygame.init()
@@ -24,74 +21,43 @@ def resource_path(relative_path):
         base_path = os.path.abspath(".")
     return os.path.join(base_path, relative_path)
 
-# Cargar imagen de fondo
-asset_background = resource_path('assets/images/background.png')
-background = pygame.image.load(asset_background)
+# Cargar imágenes y sonidos
+def load_assets():
+    global background, title, seleccion, icon, blast_sound, explosion_sound
+    global mala_salud, media_salud, salud, playerimg1, playercharacter1, playercharacter2
+    global playerimg2, bulletimg2, bulletimg, explosion_img, over_font, font
 
-# Cargar imagen del titulo principal
-asset_title = resource_path('assets/images/titulo_principal.jpeg')
-title = pygame.image.load(asset_title)
+    background = pygame.image.load(resource_path('assets/images/background.png'))
+    title = pygame.image.load(resource_path('assets/images/titulo_principal.jpeg'))
+    seleccion = pygame.image.load(resource_path('assets/images/selección_de_personajes.jpeg'))
+    icon = pygame.image.load(resource_path('assets/images/icon.png'))
+    
+    pygame.mixer.music.load(resource_path('assets/audios/background_music2.mp3'))
+    blast_sound = pygame.mixer.Sound(resource_path('assets/audios/blast.mp3'))
+    explosion_sound = pygame.mixer.Sound(resource_path('assets/audios/explosion.mp3'))
+    
+    mala_salud = pygame.image.load(resource_path('assets/images/mala_salud.png'))
+    media_salud = pygame.image.load(resource_path('assets/images/media_salud.png'))
+    salud = pygame.image.load(resource_path('assets/images/salud.png'))
+    
+    playerimg1 = pygame.image.load(resource_path('assets/images/Nave.png'))
+    playercharacter1 = pygame.image.load(resource_path('assets/images/Aldaris.png'))
+    playercharacter2 = pygame.image.load(resource_path('assets/images/Star.png'))
+    playerimg2 = pygame.image.load(resource_path('assets/images/nave2.png'))
+    
+    bulletimg2 = pygame.image.load(resource_path('assets/images/bullet2.jpg'))
+    bulletimg = pygame.image.load(resource_path('assets/images/bullet.png'))
+    
+    explosion_img = pygame.image.load(resource_path('assets/images/explosion.png'))
+    
+    over_font = pygame.font.Font(resource_path('assets/fonts/StarJedi-DGRW.ttf'), 40)
+    font = pygame.font.Font(resource_path('assets/fonts/StarJedi-DGRW.ttf'), 32)
 
-# Cargar imagen de seleccion de personajes
-asset_seleccion = resource_path('assets/images/selección_de_personajes.jpeg')
-seleccion = pygame.image.load(asset_seleccion)
+# Cargar recursos antes de cualquier otra cosa
+load_assets()
 
-# Cargar icono de ventana
-asset_icon = resource_path('assets/images/icon.png')
-icon = pygame.image.load(asset_icon)
-
-# Cargar sonido de fondo
-asset_sound = resource_path('assets/audios/background_music2.mp3')
-pygame.mixer.music.load(asset_sound)
-
-# Cargar sonido de bala
-asset_blast = resource_path('assets/audios/blast.mp3')
-blast_sound = pygame.mixer.Sound(asset_blast)
-
-# Cargar sonido de explosión
-asset_explosion = resource_path('assets/audios/explosion.mp3')
-explosion_sound = pygame.mixer.Sound(asset_explosion)
-
-# Cargar imagen del jugador
-asset_playerimg1 = resource_path('assets/images/Nave.png')
-playerimg1 = pygame.image.load(asset_playerimg1)
-
-# Cargar personaje del personaje Weddom
-asset_playercharacter1 = resource_path('assets/images/Aldaris.png')
-playercharacter1 = pygame.image.load(asset_playercharacter1)
-
-# Cargar personaje de la personaje Star
-asset_playercharacter2 = resource_path('assets/images/Star.png')
-playercharacter2 = pygame.image.load(asset_playercharacter2)
-
-# Imagen del jugador 2 (si tienes un segundo jugador)
-asset_playerimg2 = resource_path('assets/images/nave2.png')
-playerimg2 = pygame.image.load(asset_playerimg2)
-
-# Cargar imagen de la bala del jugador
-asset_bulletimg2 = resource_path('assets/images/bullet2.jpg')
-bulletimg2 = pygame.image.load(asset_bulletimg2)
-
-# Cargar imagen de la bala del enemigo
-asset_bulletimg = resource_path('assets/images/bullet.png')
-bulletimg = pygame.image.load(asset_bulletimg)
-
-# Cargar fuente para texto de game over
-asset_over_font = resource_path('assets/fonts/StarJedi-DGRW.ttf')
-over_font = pygame.font.Font(asset_over_font, 40)
-
-# Cargar fuente para texto de puntaje
-asset_font = resource_path('assets/fonts/StarJedi-DGRW.ttf')
-font = pygame.font.Font(asset_font, 32)
-
-# Cargar imágenes de explosión
-asset_explosion_img = resource_path('assets/images/explosion.png')
-explosion_img = pygame.image.load(asset_explosion_img)
-
-# Establecer el título de la ventana
+# Establecer el título de la ventana y el icono
 pygame.display.set_caption("Last One of Them")
-
-# Establecer el icono de la ventana
 pygame.display.set_icon(icon)
 
 # Reproducir sonido de fondo en loop
@@ -122,14 +88,19 @@ bulletX_change = 0
 bulletY_change = 0
 bullet_state = "ready"
 score = 0
+vidas_jugador = 3
 playerimg = None
+
+# Lista de explosiones activas
+explosions = []
+explosion_duration = 0.5  # Duración de la explosión en segundos
 
 # Función para inicializar o reiniciar las variables del juego
 def initialize_game():
     global playerX, playerY, playerx_change, enemyimg, enemyX, enemyY, enemyX_change, enemyY_change
     global enemy_bulletX, enemy_bulletY, enemy_bulletY_change, enemy_bullet_state, enemy_last_shot_time
     global enemy_shot_interval, no_of_enemies, bulletX, bulletY, bulletX_change, bulletY_change
-    global bullet_state, score, playerimg
+    global bullet_state, score, playerimg, vidas_jugador
 
     playerX = 370
     playerY = 470
@@ -179,28 +150,34 @@ def initialize_game():
 
     score = 0
     playerimg = playerimg1
+    vidas_jugador = 3
 
 # Función para mostrar la puntuación en la pantalla
 def show_score():
     score_value = font.render("PTS : " + str(score), True, (255, 255, 0))
     screen.blit(score_value, (10, 10))
 
-# Función para dibujar el jugador en la pantalla 
+# Función para dibujar el jugador en la pantalla
 def player(x, y):
     screen.blit(playerimg, (x, y))
 
 # Función para dibujar el enemigo en la pantalla
 def enemy(x, y, i):
     screen.blit(enemyimg[i], (x, y))
-    
-explosion_time = 0
-explosion_duration = 0.5  # Duración de la explosión en segundos
-explosions = []  # Lista para almacenar las explosiones activas
 
-
-# Función para dibujar la explosión en la pantalla
+# Función para añadir explosiones a la lista
 def add_explosion(x, y):
     explosions.append((x, y, time.time()))
+
+# Función para dibujar el estado de salud del jugador
+def draw_health_status():
+    if vidas_jugador == 3:
+        screen.blit(salud, (10, 40))
+    elif vidas_jugador == 2:
+        screen.blit(media_salud, (10, 40))
+    elif vidas_jugador == 1:
+        screen.blit(mala_salud,(10 , 40))
+
 
 # Función para disparar la bala del jugador
 def fire_bullet(x, y):
@@ -213,6 +190,7 @@ def fire_bullet(x, y):
 def fire_enemy_bullet(x, y, i):
     global enemy_bullet_state
     enemy_bulletX[i] = x
+    enemy_bulletY[i] = y
     enemy_bullet_state[i] = "fire"
     blast_sound.play()
     screen.blit(bulletimg, (x + 16, y + 10))
@@ -238,36 +216,21 @@ def game_over_text():
     y_offset = 0
 
     for line in lines:
-        over_text = over_font.render(line, True, (255,0,0))
+        over_text = over_font.render(line, True, (255, 0, 0))
         text_rect = over_text.get_rect(center=(screen_width // 2, (screen_height // 2) + y_offset))
         screen.blit(over_text, text_rect)
         y_offset += 40
-        
-#funcion para cargar un video
-def play_video(screen, video_path):
-    clip = VideoFileClip(video_path)
-    for frame in clip.iter_frames(fps=24, dtype="uint8"):
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                quit()
-        video_surface = pygame.surfarray.make_surface(frame.swapaxes(0, 1))
-        screen.blit(video_surface, (0, 0))
-        pygame.display.update()
-        pygame.time.wait(int(1000 / 24))  # Controla la velocidad del video
 
-# Función del menú principal
+# Función para mostrar la pantalla de inicio
 def game_start():
-    video_thread = threading.Thread(target=play_video, args=(screen, "main.mp4"))
-    video_thread.start()
-    
+    global playerimg, character_name
     menu = True
     while menu:
         screen.fill((0, 0, 0))
         screen.blit(title, (0, 0))
 
-        start_font = pygame.font.Font(asset_font, 32)
-        start_text = start_font.render("ENTER para jugar", True, (0, 0, 0))
+        start_font = pygame.font.Font(resource_path('assets/fonts/StarJedi-DGRW.ttf'), 32)
+        start_text = start_font.render("ENTER para jugar", True, (1, 75, 160))
         start_rect = start_text.get_rect(center=(screen_width // 2, screen_height // 2 + 160))
         screen.blit(start_text, start_rect)
 
@@ -282,7 +245,6 @@ def game_start():
 
         pygame.display.update()
         clock.tick(15)
-    video_thread.join()
 
 # Función para la selección de personajes
 def character_selection():
@@ -295,7 +257,7 @@ def character_selection():
         screen.fill((0, 0, 0))
         screen.blit(seleccion, (0, 0))
 
-        title_font = pygame.font.Font(asset_font, 32)
+        title_font = pygame.font.Font(resource_path('assets/fonts/StarJedi-DGRW.ttf'), 32)
         title_text = title_font.render("Elije tu personaje", True, (255, 255, 0))
         title_rect = title_text.get_rect(center=(screen_width // 2, screen_height // 4))
         screen.blit(title_text, title_rect)
@@ -305,7 +267,7 @@ def character_selection():
         screen.blit(playercharacter2, (3 * screen_width // 4 - playercharacter2.get_width() // 2, screen_height // 2))
 
         # Mostrar nombres de los personajes
-        name_font = pygame.font.Font(asset_font, 24)
+        name_font = pygame.font.Font(resource_path('assets/fonts/StarJedi-DGRW.ttf'), 24)
         name_text1 = name_font.render("Weddom", True, (255, 255, 255))
         name_text2 = name_font.render("Star", True, (255, 255, 255))
         name_rect1 = name_text1.get_rect(center=(screen_width // 4, screen_height // 2 + 100))
@@ -332,7 +294,7 @@ def character_selection():
                     global playerimg, character_name
                     if selected == 0:
                         playerimg = playerimg1
-                        character_name = "Aldaris"  # Nombre del primer personaje
+                        character_name = "Weddom"  # Nombre del primer personaje
                     else:
                         playerimg = playerimg2
                         character_name = "Star"  # Nombre del segundo personaje
@@ -348,7 +310,7 @@ def game_over_screen():
     while True:
         screen.fill((0, 0, 0))
         game_over_text()
-        start_font = pygame.font.Font(asset_font, 32)
+        start_font = pygame.font.Font(resource_path('assets/fonts/StarJedi-DGRW.ttf'), 32)
         start_text = start_font.render("ENTER para volver al menú", True, (255, 0, 0))
         start_rect = start_text.get_rect(center=(screen_width // 2, screen_height // 2 + 160))
         screen.blit(start_text, start_rect)
@@ -366,7 +328,7 @@ def game_over_screen():
 
 # Bucle principal del juego
 def game_loop():
-    global playerX, playerY, playerx_change, bulletX, bulletY, bullet_state, score
+    global playerX, playerY, playerx_change, bulletX, bulletY, bullet_state, score, vidas_jugador
 
     running = True
     while running:
@@ -399,10 +361,10 @@ def game_loop():
         for i in range(no_of_enemies):
             enemyX[i] += enemyX_change[i]
             if enemyX[i] <= 0:
-                enemyX_change[i] = 7  # Aumentar la velocidad del enemigo
+                enemyX_change[i] = 7
                 enemyY[i] += enemyY_change[i]
             elif enemyX[i] >= 736:
-                enemyX_change[i] = -7  # Aumentar la velocidad del enemigo
+                enemyX_change[i] = -7
                 enemyY[i] += enemyY_change[i]
 
             if time.time() - enemy_last_shot_time[i] >= enemy_shot_interval[i]:
@@ -439,10 +401,13 @@ def game_loop():
                 player_hit = isPlayerHit(playerX, playerY, enemy_bulletX[i], enemy_bulletY[i])
                 if player_hit:
                     explosion_sound.play()
-                    for j in range(no_of_enemies):
-                        enemyY[j] = 2000
-                    game_over_screen()
-                    break
+                    vidas_jugador -= 1
+                    if vidas_jugador <= 0:
+                        for j in range(no_of_enemies):
+                            enemyY[j] = 2000
+                        game_over_screen()
+                        return
+                    enemy_bullet_state[i] = "ready"  # Resetea el estado de la bala enemiga
 
             enemy(enemyX[i], enemyY[i], i)
 
@@ -456,6 +421,7 @@ def game_loop():
 
         player(playerX, playerY)
         show_score()
+        draw_health_status()
 
         # Dibujar explosiones activas
         current_time = time.time()
@@ -471,6 +437,5 @@ def game_loop():
 
     pygame.quit()
 
-# Iniciar el juego
-initialize_game()
+# Comenzar el juego
 game_start()
