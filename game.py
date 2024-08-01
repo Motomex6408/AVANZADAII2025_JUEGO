@@ -267,6 +267,10 @@ def game_start():
 def character_selection():
     global playerimg, character_name
 
+    # Reproducir la música de selección de personajes
+    pygame.mixer.music.load(resource_path('assets/audios/character_music.mp3'))
+    pygame.mixer.music.play(-1)
+    
     selected = 0
     select = True
 
@@ -316,12 +320,91 @@ def character_selection():
                         character_name = "Star"  # Nombre del segundo personaje
                     select = False
                     initialize_game(character_name)  # Pasa el personaje seleccionado
+                    star_wars_intro(selected)
                     game_loop()  # Iniciar el bucle principal del juego
 
         pygame.display.update()
         clock.tick(15)
 
+# Función para la introducción estilo Star Wars
+def star_wars_intro(selected_character):
+    # Detener cualquier música de fondo actual
+    pygame.mixer.music.stop()
 
+    # Texto inicial
+    intro_text_initial = "Hace mucho tiempo en una galaxia lejana, muy lejana..."
+
+    # Mostrar la línea inicial en azul y en silencio
+    screen.fill((0, 0, 0))
+    font = pygame.font.Font(resource_path('assets/fonts/StarJedi-DGRW.ttf'), 22)
+    text_surface = font.render(intro_text_initial, True, (0, 0, 255))
+    screen.blit(text_surface, (screen_width // 2 - text_surface.get_width() // 2, screen_height // 2))
+    pygame.display.update()
+    time.sleep(3)
+
+    # Pausa en negro por 5 segundos
+    screen.fill((0, 0, 0))
+    pygame.display.update()
+    time.sleep(5)
+
+    # Texto de introducción
+    intro_text = [
+        "                                     @",
+        "",
+        "                            Last one of them",
+        "",
+        "",
+        "                   Palpatine ha emitio la oren 66",
+        "                     estan atacando coruscant",
+        "               y tu debes hacer algo al respecto.",
+        "",
+        "",
+        "         Con tus habilidades extraordinarias de pilotaje",
+        "                       Y una nave muy poderosa",
+        "               debes proteger la capital galactica",
+        "                        del ejercito de Palpatine.",
+        
+        "",
+        "",
+        "         Tu misión es destruir a los invasores enemigos",
+        "             Evitar que los sith destruyan coruscant",
+        "                           proteger a los inocentes",
+        "                               y sobrevivir",
+        "",
+        "",
+        "",
+        "",
+        "                               Buena Suerte"
+    ]
+    character_line = ("         Weddom Aldaris" if selected_character == 0 else "            Star Kaillak") + ". Su misión comienza ahora"
+    intro_text.append("")
+    intro_text.append(character_line)
+
+    y = screen_height
+    intro_speed = 3
+
+    # Reproducir la música de fondo para la introducción
+    pygame.mixer.music.load(resource_path('assets/audios/background_music.mp3'))
+    pygame.mixer.music.play(-1)
+
+    while y > -len(intro_text) * 30:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+        screen.fill((0, 0, 0))
+        y -= intro_speed
+
+        for i, line in enumerate(intro_text):
+            text_surface = font.render(line, True, (255, 255, 0))
+            screen.blit(text_surface, (20, y + i * 30))
+
+        pygame.display.update()
+        clock.tick(60)
+
+    # Detener la música de fondo al finalizar la introducción
+    pygame.mixer.music.stop()
 
 # Pantalla de Game Over
 def game_over_screen():
@@ -357,6 +440,10 @@ def isBotiquinCollected(playerX, playerY, botiquinX, botiquinY):
 def game_loop():
     global playerX, playerY, playerx_change, bulletX, bulletY, bullet_state, score, vidas_jugador, botiquinX, botiquinY, botiquin_active, botiquin_last_spawn_time
 
+    # Reproducir la música de fondo para el juego
+    pygame.mixer.music.load(resource_path('assets/audios/background_music2.mp3'))
+    pygame.mixer.music.play(-1)
+    
     running = True
     while running:
         screen.fill((0, 0, 0))
