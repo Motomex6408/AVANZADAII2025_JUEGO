@@ -29,10 +29,11 @@ def resource_path(relative_path):
 
 
 # Cargar imágenes y sonidos
+# Cargar imágenes y sonidos
 def load_assets():
     global background, title, seleccion, icon, blast_sound, explosion_sound, damage_sound
     global mala_salud, media_salud, salud, playerimg1, playercharacter1, playercharacter2
-    global playerimg2, bulletimg2, bulletimg, explosion_img, over_font, font
+    global playerimg2, bulletimg2, bulletimg, explosion_img, over_font, font, botiquin_img
 
     background = pygame.image.load(resource_path('assets/images/background.png'))
     title = pygame.image.load(resource_path('assets/images/titulo_principal.jpeg'))
@@ -61,6 +62,8 @@ def load_assets():
     
     over_font = pygame.font.Font(resource_path('assets/fonts/StarJedi-DGRW.ttf'), 40)
     font = pygame.font.Font(resource_path('assets/fonts/StarJedi-DGRW.ttf'), 32)
+
+    botiquin_img = pygame.image.load(resource_path('assets/images/botiquin.png'))  # Cargar la imagen del botiquín
 
 # Cargar recursos antes de cualquier otra cosa
 load_assets()
@@ -109,7 +112,8 @@ def initialize_game(selected_character):
     global playerX, playerY, playerx_change, enemyimg, enemyX, enemyY, enemyX_change, enemyY_change
     global enemy_bulletX, enemy_bulletY, enemy_bulletY_change, enemy_bullet_state, enemy_last_shot_time
     global enemy_shot_interval, no_of_enemies, bulletX, bulletY, bulletX_change, bulletY_change
-    global bullet_state, score, playerimg, vidas_jugador
+    global bullet_state, score, playerimg, vidas_jugador, botiquinX, botiquinY, botiquin_active
+    global botiquin_last_spawn_time, botiquin_spawn_interval
 
     playerX = 370
     playerY = 470
@@ -159,6 +163,11 @@ def initialize_game(selected_character):
 
     score = 0
     vidas_jugador = 3
+    botiquinX = random.randint(0, screen_width - 64)
+    botiquinY = -64
+    botiquin_active = False
+    botiquin_last_spawn_time = time.time()
+    botiquin_spawn_interval = random.randint(10, 20)  # Intervalo aleatorio entre 10 y 20 segundos
 
 # Función para mostrar la puntuación en la pantalla
 def show_score():
@@ -335,9 +344,18 @@ def game_over_screen():
         pygame.display.update()
         clock.tick(15)
 
-# Bucle principal del juego
+# Función para dibujar el botiquín en la pantalla
+def dibujar_botiquin(x, y):
+    screen.blit(botiquin_img, (x, y))
+
+# Función para verificar si el jugador ha recogido el botiquín
+def isBotiquinCollected(playerX, playerY, botiquinX, botiquinY):
+    distance = math.sqrt((math.pow(playerX - botiquinX, 2)) + (math.pow(playerY - botiquinY, 2)))
+    return distance < 27
+
+# Añadir el manejo del botiquín en el bucle principal del juego
 def game_loop():
-    global playerX, playerY, playerx_change, bulletX, bulletY, bullet_state, score, vidas_jugador
+    global playerX, playerY, playerx_change, bulletX, bulletY, bullet_state, score, vidas_jugador, botiquinX, botiquinY, botiquin_active, botiquin_last_spawn_time
 
     running = True
     while running:
@@ -404,6 +422,7 @@ def game_loop():
                 enemyX[i] = random.randint(0, 736)
                 enemyY[i] = random.randint(50, 150)
 
+
             if enemy_bullet_state[i] == "fire":
                 fire_enemy_bullet(enemy_bulletX[i], enemy_bulletY[i], i)
                 enemy_bulletY[i] += enemy_bulletY_change[i]
@@ -420,10 +439,10 @@ def game_loop():
                             enemyY[j] = 2000
                         game_over_screen()
                         return
-                    enemy_bullet_state[i] = "ready"  # Resetea el estado de la bala enemiga
+                    enemy_bullet_state[i] = "ready"
 
             enemy(enemyX[i], enemyY[i], i)
-
+            
         if bulletY <= 0:
             bulletY = 480
             bullet_state = "ready"
@@ -444,6 +463,25 @@ def game_loop():
                 screen.blit(explosion_img, (x, y))
             else:
                 explosions.remove(explosion)
+
+        # Manejar el botiquín
+        if not botiquin_active and time.time() - botiquin_last_spawn_time > botiquin_spawn_interval:
+            botiquinX = random.randint(0, screen_width - 64)
+            botiquinY = -64
+            botiquin_active = True
+            botiquin_last_spawn_time = time.time()
+
+        if botiquin_active:
+            dibujar_botiquin(botiquinX, botiquinY)
+            botiquinY += 5
+
+            if botiquinY > screen_height:
+                botiquin_active = False
+
+            if isBotiquinCollected(playerX, playerY, botiquinX, botiquinY):
+                botiquin_active = False
+                if vidas_jugador < 3:
+                    vidas_jugador += 1
 
         pygame.display.update()
         clock.tick(60)
