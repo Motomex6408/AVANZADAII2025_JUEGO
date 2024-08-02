@@ -271,6 +271,10 @@ def character_selection():
     pygame.mixer.music.load(resource_path('assets/audios/character_music.mp3'))
     pygame.mixer.music.play(-1)
     
+    # Cargar los sonidos
+    select_sound = pygame.mixer.Sound(resource_path('assets/audios/select_sound.wav'))
+    confirm_sound = pygame.mixer.Sound(resource_path('assets/audios/confirm_sound.mp3'))
+    
     selected = 0
     select = True
 
@@ -309,10 +313,13 @@ def character_selection():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT:
                     selected = 0
+                    select_sound.play()  # Reproducir sonido de selección
                 if event.key == pygame.K_RIGHT:
                     selected = 1
+                    select_sound.play()  # Reproducir sonido de selección
                 if event.key == pygame.K_RETURN:
                     if selected == 0:
+                        confirm_sound.play()  # Reproducir sonido de confirmación
                         playerimg = playerimg1
                         character_name = "Weddom"  # Nombre del primer personaje
                     else:
@@ -381,7 +388,7 @@ def star_wars_intro(selected_character):
     intro_text.append(character_line)
 
     y = screen_height
-    intro_speed = 3
+    intro_speed = 0.5
 
     # Reproducir la música de fondo para la introducción
     pygame.mixer.music.load(resource_path('assets/audios/background_music.mp3'))
