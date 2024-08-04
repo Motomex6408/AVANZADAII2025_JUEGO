@@ -31,7 +31,7 @@ def resource_path(relative_path):
 # Cargar imágenes y sonidos
 # Cargar imágenes y sonidos
 def load_assets():
-    global background, title, seleccion, instrucciones, icon, blast_sound, explosion_sound, damage_sound
+    global background, title, seleccion, creditos , instrucciones, biografias, icon, blast_sound, explosion_sound, damage_sound
     global mala_salud, media_salud, salud, playerimg1, playercharacter1, playercharacter2
     global playerimg2, bulletimg2, bulletimg, explosion_img, over_font, font, botiquin_img
 
@@ -39,7 +39,9 @@ def load_assets():
     title = pygame.image.load(resource_path('assets/images/titulo_principal.jpeg'))
     seleccion = pygame.image.load(resource_path('assets/images/selección_de_personajes.jpeg'))
     icon = pygame.image.load(resource_path('assets/images/icon.png'))
-    instrucciones = pygame.image.load(resource_path('assets/images/propuesta_cambiada.jpeg'))
+    biografias = pygame.image.load(resource_path('assets/images/propuesta_cambiada.jpeg'))
+    instrucciones = pygame.image.load(resource_path('assets/images/instrucciones.jpg'))
+    creditos = pygame.image.load(resource_path('assets/images/creditos.jpg'))
     
     pygame.mixer.music.load(resource_path('assets/audios/background_music2.mp3'))
     blast_sound = pygame.mixer.Sound(resource_path('assets/audios/blast.mp3'))
@@ -115,17 +117,19 @@ def show_characters_info():
     
     character_info = {
         "Weddom": [
-            "Weddom Aldaris es un valiente Jedi que ha",
-            "dedicado su vida a proteger la galaxia",
-            "de las fuerzas del mal. Su experiencia",
-            "y habilidades en combate lo hacen un",
-            "oponente formidable para cualquier enemigo.",
-            "Es bueno con las armas de fuego y es buen piloto.",
-            "Ha sido entrenado por los mejores maestros Jedi.",
-            "Es muy inteligente y astuto, siempre está por delante de los demás.",
-            "Entiende a las personas y puede perdonarlas",
-            "pero si ve que representan un verdadero peligro,",
-            "no dudará en tomar medidas drásticas."
+            "Weddom Aldaris es un Jedi sereno y tranquilo",
+            "conocido por su dedicación a entrenar y perfeccionar sus técnicas",
+            "Bajo la tutela de su maestro Keldar Thur",
+            "ha desarrollado una profunda comprensión de la Fuerza",
+            "y una notable habilidad en el combate.",
+            "Sueña con convertirse en maestro y formar parte del Consejo Jedi algún día.",
+            "Es un oponente formidable para cualquier enemigo",
+            "destacándose no solo en el manejo del sable de luz",
+            "sino también en el uso de blasters y como piloto.",
+            "gracias a su maestro, Weddom se ha vuelto inteligente y astuto en batalla",
+            "siempre al tanto de los pasos de los demás.",
+            "No hay presencias oscuras dentro de el, sin embargo",
+            "si percibe verdadero peligro, no dudará en tomar medidas drásticas"
         ],
         "Star": [
             "Star Kailak es una joven asesina con habilidades",
@@ -147,7 +151,7 @@ def show_characters_info():
 
     while True:
         screen.fill(background_color)
-        
+        screen.blit(biografias, (0, 0))
         # Mostrar opciones de personajes
         y = 50
         for i, option in enumerate(character_options):
@@ -327,7 +331,7 @@ def game_start():
     confirm_sound = pygame.mixer.Sound(resource_path('assets/audios/confirm_sound.mp3'))
     
     selected_option = 0
-    options = ["Jugar", "Instrucciones", "Personajes", "Salir"]
+    options = ["Jugar", "instrucciones", "Personajes", "Creditos", "Salir"]
     font = pygame.font.Font(resource_path('assets/fonts/StarJedi-DGRW.ttf'), 32)
     
     while menu:
@@ -368,6 +372,9 @@ def game_start():
                         confirm_sound.play()
                         show_characters_info()
                     elif selected_option == 3:
+                        confirm_sound.play()
+                        show_creditos()
+                    elif selected_option == 4:
                         pygame.mixer.music.stop()
                         confirm_sound.play()
                         screen.fill((0, 0, 0))
@@ -415,7 +422,28 @@ def show_instructions():
         pygame.display.update()
         clock.tick(15)
 
+def show_creditos():
+    confirm_sound = pygame.mixer.Sound(resource_path('assets/audios/confirm_sound.mp3'))
+    font = pygame.font.Font(resource_path('assets/fonts/StarJedi-DGRW.ttf'), 32)  # Asegúrate de tener esta fuente
+    creditos = pygame.image.load(resource_path('assets/images/creditos.jpg'))  # Fondo de créditos
 
+    
+    while True:
+        screen.fill((0, 0, 0))
+        screen.blit(creditos, (0, 0))  # Fondo de la pantalla de créditos
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:
+                    confirm_sound.play()  # Reproducir sonido de confirmación
+                    return  # Regresa al menú principal
+
+        pygame.display.update()
+        clock.tick(15)
+    
 # Función para la selección de personajes
 def character_selection():
     global playerimg, character_name
@@ -593,13 +621,13 @@ def show_cinematic(selected):
         nave_img = playerimg2
         dialogos = [
             "Radio: Kailak, ¿respondes?",
-            "Kailak: Aquí Kailak.",
+            "Kailak: ¿qué pasa?.",
             "Radio: Gracias a Dios, pensábamos que te habíamos perdido.",
-            "Kailak: ¿qué pasa?",
+            "Kailak: No, eso nunca pasará y ahora dime, ¿qué ocurre?.",
             "Radio: Los clones nos atacan y han tomado Coruscant.",
-            "Kailak: ¿Qué pasa con Weddom?",
+            "Kailak: ¿qué pasa con Weddom?",
             "Radio: Weddom ha caído.",
-            "Kailak: No puede ser!...Weddom... Entiendo. Voy de inmediato.",
+            "Kailak: No puede ser!...Enserio? Está bien.... voy de inmediato.",
         ]
 
    
