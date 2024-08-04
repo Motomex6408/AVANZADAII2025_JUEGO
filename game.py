@@ -31,7 +31,7 @@ def resource_path(relative_path):
 # Cargar imágenes y sonidos
 # Cargar imágenes y sonidos
 def load_assets():
-    global background, title, seleccion, icon, blast_sound, explosion_sound, damage_sound
+    global background, title, seleccion, instrucciones, icon, blast_sound, explosion_sound, damage_sound
     global mala_salud, media_salud, salud, playerimg1, playercharacter1, playercharacter2
     global playerimg2, bulletimg2, bulletimg, explosion_img, over_font, font, botiquin_img
 
@@ -39,12 +39,11 @@ def load_assets():
     title = pygame.image.load(resource_path('assets/images/titulo_principal.jpeg'))
     seleccion = pygame.image.load(resource_path('assets/images/selección_de_personajes.jpeg'))
     icon = pygame.image.load(resource_path('assets/images/icon.png'))
+    instrucciones = pygame.image.load(resource_path('assets/images/propuesta_cambiada.jpeg'))
     
     pygame.mixer.music.load(resource_path('assets/audios/background_music2.mp3'))
     blast_sound = pygame.mixer.Sound(resource_path('assets/audios/blast.mp3'))
     explosion_sound = pygame.mixer.Sound(resource_path('assets/audios/explosion.mp3'))
-    damage_sound = pygame.mixer.Sound(resource_path('assets/audios/damage.mp3'))  # Cargar archivo de sonido
-    damage_sound.set_volume(1.0)  # Ajustar el volumen
 
     mala_salud = pygame.image.load(resource_path('assets/images/mala_salud.png'))
     media_salud = pygame.image.load(resource_path('assets/images/media_salud.png'))
@@ -52,7 +51,7 @@ def load_assets():
     
     playerimg1 = pygame.image.load(resource_path('assets/images/Nave.png'))
     playercharacter1 = pygame.image.load(resource_path('assets/images/Aldaris.png'))
-    playercharacter2 = pygame.image.load(resource_path('assets/images/Star.png'))
+    playercharacter2 = pygame.image.load(resource_path('assets/images/star.png'))
     playerimg2 = pygame.image.load(resource_path('assets/images/Nave2.png'))
     
     bulletimg2 = pygame.image.load(resource_path('assets/images/bullet2.jpg'))
@@ -102,6 +101,86 @@ bullet_state = "ready"
 score = 0
 vidas_jugador = 3
 playerimg = None
+
+
+title = pygame.image.load(resource_path('assets/images/titulo_principal.jpeg'))
+weddom_bg = pygame.image.load(resource_path('assets/images/weddom_bg.jpg'))
+kailak_bg = pygame.image.load(resource_path('assets/images/kaillak_bg.jpg'))
+playerimg = None
+character_name = "Weddom"  # Valor inicial, puede ser cambiado por la selección de personaje
+
+
+def show_characters_info():
+    global character_name
+    
+    character_info = {
+        "Weddom": [
+            "Weddom Aldaris es un valiente Jedi que ha",
+            "dedicado su vida a proteger la galaxia",
+            "de las fuerzas del mal. Su experiencia",
+            "y habilidades en combate lo hacen un",
+            "oponente formidable para cualquier enemigo.",
+            "Es bueno con las armas de fuego y es buen piloto.",
+            "Ha sido entrenado por los mejores maestros Jedi.",
+            "Es muy inteligente y astuto, siempre está por delante de los demás.",
+            "Entiende a las personas y puede perdonarlas",
+            "pero si ve que representan un verdadero peligro,",
+            "no dudará en tomar medidas drásticas."
+        ],
+        "Star": [
+            "Star Kailak es una joven asesina con habilidades",
+            "excepcionales y una determinación inquebrantable.",
+            "Aunque aún es joven, ha demostrado ser una",
+            "guerrera capaz de enfrentarse a cualquier tipo de amenazas",
+            "A pesar de ser una asesina en serie",
+            "Ha decidido ayudar a Weddom para poder combatir con el lado oscuro.",
+            "Es especialmente hábil con la espada y el tiro al blanco.",
+            "Si te cruzas en su camino, es mejor que huyas!",
+            "Ella no tiene problemas en mancharse sus manos de tu sangre."
+        ]
+    }
+
+    character_options = ["Weddom", "Star"]
+    font = pygame.font.Font(resource_path('assets/fonts/StarJedi-DGRW.ttf'), 15)
+    background_color = (0, 0, 0)
+    text_color = (255, 255, 255)
+
+    while True:
+        screen.fill(background_color)
+        
+        # Mostrar opciones de personajes
+        y = 50
+        for i, option in enumerate(character_options):
+            color = (255, 0, 0) if option == character_name else (255, 255, 255)
+            option_text = font.render(option, True, color)
+            screen.blit(option_text, (20, y + i * 40))
+        
+        # Mostrar biografía del personaje seleccionado
+        y += 100
+        title_text = font.render(f"Biografía de {character_name}", True, text_color)
+        screen.blit(title_text, (20, y))
+        y += 50
+
+        info_lines = character_info.get(character_name, ["Información no disponible."])
+        for line in info_lines:
+            text_surface = font.render(line, True, text_color)
+            screen.blit(text_surface, (20, y))
+            y += 30
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:
+                    return  # Volver al menú anterior
+                elif event.key == pygame.K_UP:
+                    character_name = character_options[(character_options.index(character_name) - 1) % len(character_options)]
+                elif event.key == pygame.K_DOWN:
+                    character_name = character_options[(character_options.index(character_name) + 1) % len(character_options)]
+
+        pygame.display.update()
+        clock.tick(15)
 
 # Lista de explosiones activas
 explosions = []
@@ -241,16 +320,14 @@ def game_over_text():
 # Función para mostrar la pantalla de inicio
 def game_start():
     global playerimg, character_name
-    # Reproducir la música del menu principal
     pygame.mixer.music.load(resource_path('assets/audios/Title_Screen.mp3'))
     pygame.mixer.music.play(-1)
     menu = True
-    # Cargar los sonidos
     select_sound = pygame.mixer.Sound(resource_path('assets/audios/select_sound.wav'))
     confirm_sound = pygame.mixer.Sound(resource_path('assets/audios/confirm_sound.mp3'))
     
     selected_option = 0
-    options = ["Jugar", "Opciones", "Salir"]
+    options = ["Jugar", "Instrucciones", "Personajes", "Salir"]
     font = pygame.font.Font(resource_path('assets/fonts/StarJedi-DGRW.ttf'), 32)
     
     while menu:
@@ -269,26 +346,30 @@ def game_start():
                 quit()
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_DOWN:
-                    select_sound.play()  # Reproducir sonido de selección
+                    select_sound.play()
                     selected_option = (selected_option + 1) % len(options)
                 elif event.key == pygame.K_UP:
-                    select_sound.play()  # Reproducir sonido de selección
+                    select_sound.play()
                     selected_option = (selected_option - 1) % len(options)
                 elif event.key == pygame.K_RETURN:
                     if selected_option == 0:
-                        pygame.mixer.music.stop() #pausar musica
+                        pygame.mixer.music.stop()
                         menu = False
-                        confirm_sound.play()  # Reproducir sonido de confirmación
+                        confirm_sound.play()
                         screen.fill((0, 0, 0))
                         pygame.display.update()
                         time.sleep(3)
                         character_selection()
                     elif selected_option == 1:
-                        # Lógica para "Opciones"
+                        confirm_sound.play()
+                        show_instructions()
                         pass
                     elif selected_option == 2:
+                        confirm_sound.play()
+                        show_characters_info()
+                    elif selected_option == 3:
                         pygame.mixer.music.stop()
-                        confirm_sound.play()  # Reproducir sonido de confirmación
+                        confirm_sound.play()
                         screen.fill((0, 0, 0))
                         pygame.display.update()
                         time.sleep(1)
@@ -297,7 +378,44 @@ def game_start():
 
         pygame.display.update()
         clock.tick(15)
+
+def show_instructions():
+    confirm_sound = pygame.mixer.Sound(resource_path('assets/audios/confirm_sound.mp3'))
+    font = pygame.font.Font(resource_path('assets/fonts/StarJedi-DGRW.ttf'), 15)
+    instructions_text = [
+        "Instrucciones del Juego:",
+        "",
+        "1. usa las teclas de flecha izquierda y derecha para mover tu nave.",
+        "2. Pulsa la barra espaciadora para disparar.",
+        "3. Evita los disparos enemigos y destruye las naves enemigas.",
+        "4. Recoge los botiquines para recuperar salud.",
+        "5. Tu objetivo es sobrevivir el mayor tiempo posible.",
+        "",
+        "Presiona ENTER para volver al menú."
+    ]
     
+    while True:
+        screen.fill((0, 0, 0))
+        screen.blit(instrucciones, (0, 0))
+        y = 50
+        for line in instructions_text:
+            text_surface = font.render(line, True, (255, 215, 0))
+            screen.blit(text_surface, (50, y))
+            y += 30
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:
+                    confirm_sound.play()  # Reproducir sonido de confirmación
+                    return
+
+        pygame.display.update()
+        clock.tick(15)
+
+
 # Función para la selección de personajes
 def character_selection():
     global playerimg, character_name
@@ -368,6 +486,7 @@ def character_selection():
                     time.sleep(1)                   
                     initialize_game(character_name)  # Pasa el personaje seleccionado
                     star_wars_intro(selected)
+                    show_cinematic(selected)  # Mostrar la cinemática
                     game_loop()  # Iniciar el bucle principal del juego
 
         pygame.display.update()
@@ -423,7 +542,7 @@ def star_wars_intro(selected_character):
         "",
         "                               Buena Suerte"
     ]
-    character_line = ("         Weddom Aldaris" if selected_character == 0 else "            Star Kaillak") + ". Su misión comienza ahora"
+    character_line = ("         Weddom Aldaris" if selected_character == 0 else "            Star Kailak") + ". Su misión comienza ahora"
     intro_text.append("")
     intro_text.append(character_line)
 
@@ -453,6 +572,73 @@ def star_wars_intro(selected_character):
     # Detener la música de fondo al finalizar la introducción
     pygame.mixer.music.stop()
 
+def show_cinematic(selected):
+    # Carga el sonido de radio
+    radio_sound = pygame.mixer.Sound(resource_path('assets/audios/radio_sound.mp3'))
+                                     
+    # Seleccionar la nave y el diálogo según el personaje elegido
+    if selected == 0:
+        nave_img = playerimg1
+        dialogos = [
+            "Radio: Weddom, ¿respondes?",
+            "Weddom: Aquí Weddom.",
+            "Radio: Gracias a Dios, pensábamos que te habíamos perdido.",
+            "Weddom: ¿qué pasa ahí?",
+            "Radio: Los clones nos atacan y han tomado Coruscant.",
+            "Weddom: ¿Y Kailak?",
+            "Radio: Kailak ha caído.",
+            "Weddom: No!... Kailak!...No puede ser. voy en camino.",
+        ]
+    else:
+        nave_img = playerimg2
+        dialogos = [
+            "Radio: Kailak, ¿respondes?",
+            "Kailak: Aquí Kailak.",
+            "Radio: Gracias a Dios, pensábamos que te habíamos perdido.",
+            "Kailak: ¿qué pasa?",
+            "Radio: Los clones nos atacan y han tomado Coruscant.",
+            "Kailak: ¿Qué pasa con Weddom?",
+            "Radio: Weddom ha caído.",
+            "Kailak: No puede ser!...Weddom... Entiendo. Voy de inmediato.",
+        ]
+
+   
+
+    # Mostrar la nave moviéndose por el espacio
+    nave_x = screen_width // 2 - nave_img.get_width() // 2
+    nave_y = screen_height
+    nave_speed = 2
+
+    dialogo_font = pygame.font.Font(resource_path('assets/fonts/StarJedi-DGRW.ttf'), 20)
+    dialogo_index = 0
+
+    while nave_y > screen_height // 2:
+        screen.fill((0, 0, 0))  # Fondo negro
+        screen.blit(background, (0, 0))  # Fondo del espacio
+        nave_y -= nave_speed
+        screen.blit(nave_img, (nave_x, nave_y))
+
+        # Mostrar el diálogo actual
+        if dialogo_index < len(dialogos):
+            radio_sound.play()  # Reproducir el sonido de radio
+            time.sleep(0.5)  # Esperar medio segundo para simular la transmisión
+            dialogo_text = dialogo_font.render(dialogos[dialogo_index], True, (191, 255, 0))
+            dialogo_rect = dialogo_text.get_rect(center=(screen_width // 2, screen_height // 2))
+            screen.blit(dialogo_text, dialogo_rect)
+
+        pygame.display.update()
+        clock.tick(60)
+
+        # Avanzar al siguiente diálogo
+        if dialogo_index < len(dialogos):
+            time.sleep(4)  # Esperar 3 segundos antes de mostrar el siguiente diálogo
+            dialogo_index += 1
+
+    # Detener la música de la cinemática
+    pygame.mixer.music.stop()
+    # Iniciar el juego
+    game_loop()
+    
 # Pantalla de Game Over
 def game_over_screen():
     # Cargar los sonidos
@@ -503,7 +689,7 @@ def game_loop():
     pygame.mixer.music.play(-1)
     screen.fill((0, 0, 0))
     pygame.display.update()
-    time.sleep(2) 
+    time.sleep(1) 
     running = True
     while running:
         screen.fill((0, 0, 0))
