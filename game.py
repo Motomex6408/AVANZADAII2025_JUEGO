@@ -32,7 +32,7 @@ def resource_path(relative_path):
 # Cargar imágenes y sonidos
 def load_assets():
     global background, title, seleccion, creditos , instrucciones, biografias, icon, blast_sound, explosion_sound, damage_sound
-    global mala_salud, media_salud, salud, playerimg1, playercharacter1, playercharacter2
+    global mala_salud, media_salud, game_over, salud, playerimg1, playercharacter1, playercharacter2
     global playerimg2, bulletimg2, bulletimg, explosion_img, over_font, font, botiquin_img
 
     background = pygame.image.load(resource_path('assets/images/background.png'))
@@ -46,7 +46,7 @@ def load_assets():
     pygame.mixer.music.load(resource_path('assets/audios/background_music2.mp3'))
     blast_sound = pygame.mixer.Sound(resource_path('assets/audios/blast.mp3'))
     explosion_sound = pygame.mixer.Sound(resource_path('assets/audios/explosion.mp3'))
-
+    game_over= pygame.mixer.Sound(resource_path('assets/audios/game_over.mp3'))
     mala_salud = pygame.image.load(resource_path('assets/images/mala_salud.png'))
     media_salud = pygame.image.load(resource_path('assets/images/media_salud.png'))
     salud = pygame.image.load(resource_path('assets/images/salud.png'))
@@ -147,7 +147,7 @@ def show_characters_info():
     character_options = ["Weddom", "Star"]
     font = pygame.font.Font(resource_path('assets/fonts/StarJedi-DGRW.ttf'), 15)
     background_color = (0, 0, 0)
-    text_color = (255, 255, 255)
+    text_color = (255, 215, 0)
 
     while True:
         screen.fill(background_color)
@@ -155,7 +155,7 @@ def show_characters_info():
         # Mostrar opciones de personajes
         y = 50
         for i, option in enumerate(character_options):
-            color = (255, 0, 0) if option == character_name else (255, 255, 255)
+            color = (255, 0, 0) if option == character_name else (0, 255, 255)
             option_text = font.render(option, True, color)
             screen.blit(option_text, (20, y + i * 40))
         
@@ -185,6 +185,7 @@ def show_characters_info():
 
         pygame.display.update()
         clock.tick(15)
+
 
 # Lista de explosiones activas
 explosions = []
@@ -568,9 +569,9 @@ def star_wars_intro(selected_character):
         "",
         "",
         "",
-        "                               Buena Suerte"
+        "                       que la fuerza te acompañe"
     ]
-    character_line = ("         Weddom Aldaris" if selected_character == 0 else "            Star Kailak") + ". Su misión comienza ahora"
+    character_line = ("          Weddom Aldaris" if selected_character == 0 else "            Star Kailak") + ". Su misión comienza ahora"
     intro_text.append("")
     intro_text.append(character_line)
 
@@ -659,17 +660,60 @@ def show_cinematic(selected):
 
         # Avanzar al siguiente diálogo
         if dialogo_index < len(dialogos):
-            time.sleep(4)  # Esperar 3 segundos antes de mostrar el siguiente diálogo
+            time.sleep(2)  # Esperar 2 segundos antes de mostrar el siguiente diálogo
             dialogo_index += 1
 
     # Detener la música de la cinemática
     pygame.mixer.music.stop()
     # Iniciar el juego
     game_loop()
+
+def death_cinematic():
+    global playerY
+    pygame.mixer.music.stop()
+    # Reproducir el sonido de explosión inicial
+    explosion_sound.play()
     
+    # Ciclo de animación de la caída de la nave
+    for i in range(60):  # Ajusta el número de iteraciones para la duración de la cinemática
+        screen.fill((0, 0, 0))  # Limpiar la pantalla con un fondo negro
+        playerY += 3  # Incrementa la posición Y para simular caída lenta
+        
+        # Mostrar la nave dañada
+        screen.blit(playerimg, (playerX, playerY))
+        
+        # Mostrar explosiones intermitentes
+        if i % 5 == 0:  # Mostrar explosión cada 5 cuadros
+            screen.blit(explosion_img, (playerX, playerY))
+            explosion_sound.play()
+        
+        # Añadir parpadeo de luces de emergencia
+        if i % 10 == 0:
+            screen.fill((255, 0, 0))  # Fondo rojo intermitente
+
+        # Añadir ruido estático (interferencias)
+        if i % 15 == 0:
+            static_noise = pygame.Surface(screen.get_size())
+            static_noise.set_alpha(128)  # Ajustar la transparencia de la interferencia
+            static_noise.fill((255, 255, 255))
+            screen.blit(static_noise, (0, 0))
+        
+        # Actualizar la pantalla
+        pygame.display.update()
+        time.sleep(0.1)  # Pausa para simular la animación
+    
+    # Pausa más larga para el impacto final
+    explosion_sound.play()
+    time.sleep(2)
+    
+    # Llamar a la función de Game Over
+    game_over_screen()
+
+       
 # Pantalla de Game Over
 def game_over_screen():
     # Cargar los sonidos
+    game_over.play()
     confirm_sound = pygame.mixer.Sound(resource_path('assets/audios/confirm_sound.mp3'))
     pygame.mixer.music.stop()
     screen.fill((0, 0, 0))
@@ -708,6 +752,36 @@ def isBotiquinCollected(playerX, playerY, botiquinX, botiquinY):
     distance = math.sqrt((math.pow(playerX - botiquinX, 2)) + (math.pow(playerY - botiquinY, 2)))
     return distance < 27
 
+def pause_game():
+    paused = True
+    pygame.mixer.music.pause()
+    font = pygame.font.SysFont(None, 55)
+    pause_text = font.render('Juego en Pausa', True, (255, 255, 255))
+    select_sound = pygame.mixer.Sound(resource_path('assets/audios/select_sound.wav'))
+    
+    while paused:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_p:  # Tecla 'P' para continuar
+                    paused = False
+                    pygame.mixer.music.unpause()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_q:
+                    game_start()
+                    select_sound.play()
+                
+            
+
+
+                    
+        screen.blit(pause_text, (250, 300))
+        pygame.display.update()
+        clock.tick(5)
+
+
 # Añadir el manejo del botiquín en el bucle principal del juego
 def game_loop():
     global playerX, playerY, playerx_change, bulletX, bulletY, bullet_state, score, vidas_jugador, botiquinX, botiquinY, botiquin_active, botiquin_last_spawn_time
@@ -717,7 +791,7 @@ def game_loop():
     pygame.mixer.music.play(-1)
     screen.fill((0, 0, 0))
     pygame.display.update()
-    time.sleep(1) 
+    time.sleep(1)
     running = True
     while running:
         screen.fill((0, 0, 0))
@@ -731,6 +805,9 @@ def game_loop():
                     playerx_change = -5
                 if event.key == pygame.K_RIGHT:
                     playerx_change = 5
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_p:  # Tecla 'P' para pausar
+                        pause_game()
                 if event.key == pygame.K_SPACE:
                     if bullet_state == "ready":
                         bulletX = playerX
@@ -769,20 +846,17 @@ def game_loop():
                 game_over_screen()
                 break
 
-            # Inicializar el canal de sonido para explosiones
             explosion_channel = pygame.mixer.Channel(1)
 
-            # En el bucle principal del juego, al detectar una colisión con un enemigo
             collision = isCollision(enemyX[i], enemyY[i], bulletX, bulletY)
             if collision:
-                explosion_channel.play(explosion_sound)  # Usar el canal específico para reproducir el sonido
-                add_explosion(enemyX[i], enemyY[i])  # Añadir explosión a la lista
+                explosion_channel.play(explosion_sound)
+                add_explosion(enemyX[i], enemyY[i])
                 bulletY = 480
                 bullet_state = "ready"
                 score += 1
                 enemyX[i] = random.randint(0, 736)
                 enemyY[i] = random.randint(50, 150)
-
 
             if enemy_bullet_state[i] == "fire":
                 fire_enemy_bullet(enemy_bulletX[i], enemy_bulletY[i], i)
@@ -798,6 +872,9 @@ def game_loop():
                     if vidas_jugador <= 0:
                         for j in range(no_of_enemies):
                             enemyY[j] = 2000
+                        # Llamada a la cinemática de muerte
+                        death_cinematic()
+                        # Mostrar la pantalla de Game Over después de la cinemática
                         game_over_screen()
                         return
                     enemy_bullet_state[i] = "ready"
@@ -816,7 +893,6 @@ def game_loop():
         show_score()
         draw_health_status()
 
-        # Dibujar explosiones activas
         current_time = time.time()
         for explosion in explosions[:]:
             x, y, start_time = explosion
@@ -825,7 +901,6 @@ def game_loop():
             else:
                 explosions.remove(explosion)
 
-        # Manejar el botiquín
         if not botiquin_active and time.time() - botiquin_last_spawn_time > botiquin_spawn_interval:
             botiquinX = random.randint(0, screen_width - 64)
             botiquinY = -64
