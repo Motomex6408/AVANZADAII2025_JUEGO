@@ -86,6 +86,7 @@ clock = pygame.time.Clock()
 # Variables globales
 playerX = 0
 playerY = 0
+high_score = 0
 playerx_change = 0
 enemyimg = []
 enemyX = []
@@ -197,7 +198,7 @@ explosion_duration = 0.5  # Duración de la explosión en segundos
 
 # Función para inicializar o reiniciar las variables del juego
 def initialize_game(selected_character):
-    global playerX, playerY, playerx_change, enemyimg, enemyX, enemyY, enemyX_change, enemyY_change
+    global playerX, playerY, high_score, playerx_change, enemyimg, enemyX, enemyY, enemyX_change, enemyY_change
     global enemy_bulletX, enemy_bulletY, enemy_bulletY_change, enemy_bullet_state, enemy_last_shot_time
     global enemy_shot_interval, no_of_enemies, bulletX, bulletY, bulletX_change, bulletY_change
     global bullet_state, score, playerimg, vidas_jugador, botiquinX, botiquinY, botiquin_active
@@ -336,7 +337,7 @@ def game_start():
     confirm_sound = pygame.mixer.Sound(resource_path('assets/audios/confirm_sound.mp3'))
     
     selected_option = 0
-    options = ["Jugar", "instrucciones", "Personajes", "Creditos", "Salir"]
+    options = ["Jugar", "instrucciones", "Personajes", "Records", "Creditos", "Salir"]
     font = pygame.font.Font(resource_path('assets/fonts/StarJedi-DGRW.ttf'), 32)
     
     while menu:
@@ -378,8 +379,11 @@ def game_start():
                         show_characters_info()
                     elif selected_option == 3:
                         confirm_sound.play()
-                        show_creditos()
+                        show_records()
                     elif selected_option == 4:
+                        confirm_sound.play()
+                        show_creditos()
+                    elif selected_option == 5:
                         pygame.mixer.music.stop()
                         confirm_sound.play()
                         screen.fill((0, 0, 0))
@@ -391,6 +395,36 @@ def game_start():
         pygame.display.update()
         clock.tick(15)
 
+def show_records():
+    global high_score
+    screen.fill((0, 0, 0))
+    font = pygame.font.Font(resource_path('assets/fonts/StarJedi-DGRW.ttf'), 32)
+    title_text = font.render("Records", True, (255, 255, 255))
+    title_rect = title_text.get_rect(center=(screen_width // 2, screen_height // 4))
+    screen.blit(title_text, title_rect)
+
+    # Mostrando el mayor récord
+    record_text = font.render(f"Mayor Récord: {high_score}", True, (255, 255, 255))
+    record_rect = record_text.get_rect(center=(screen_width // 2, screen_height // 2))
+    screen.blit(record_text, record_rect)
+
+    # Instrucción para volver al menú
+    back_text = font.render("Presiona ESC para volver", True, (255, 255, 255))
+    back_rect = back_text.get_rect(center=(screen_width // 2, screen_height // 2 + 100))
+    screen.blit(back_text, back_rect)
+
+    pygame.display.update()
+
+    waiting = True
+    while waiting:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    waiting = False
+                    
 def show_instructions():
     confirm_sound = pygame.mixer.Sound(resource_path('assets/audios/confirm_sound.mp3'))
     font = pygame.font.Font(resource_path('assets/fonts/StarJedi-DGRW.ttf'), 15)
@@ -608,7 +642,7 @@ def star_wars_intro(selected_character):
 def show_cinematic(selected):
     # Carga el sonido de radio
     radio_sound = pygame.mixer.Sound(resource_path('assets/audios/radio_sound.mp3'))
-                                     
+    
     # Seleccionar la nave y el diálogo según el personaje elegido
     if selected == 0:
         nave_img = playerimg1
@@ -620,7 +654,7 @@ def show_cinematic(selected):
             "Radio: Los clones nos atacan y han tomado Coruscant.",
             "Weddom: ¿Y Kailak?",
             "Radio: Kailak ha caído.",
-            "Weddom: No!... Kailak!...No puede ser. voy en camino.",
+            "Weddom: No!... Kailak!...No puede ser. Voy en camino.",
         ]
     else:
         nave_img = playerimg2
@@ -632,46 +666,97 @@ def show_cinematic(selected):
             "Radio: Los clones nos atacan y han tomado Coruscant.",
             "Kailak: ¿qué pasa con Weddom?",
             "Radio: Weddom ha caído.",
-            "Kailak: No puede ser!...Enserio? Está bien.... voy de inmediato.",
+            "Kailak: No puede ser!... En serio? Está bien.... Voy de inmediato.",
         ]
-
-   
-
+        
     # Mostrar la nave moviéndose por el espacio
     nave_x = screen_width // 2 - nave_img.get_width() // 2
     nave_y = screen_height
-    nave_speed = 2
+    nave_speed = 0.9
 
     dialogo_font = pygame.font.Font(resource_path('assets/fonts/StarJedi-DGRW.ttf'), 20)
     dialogo_index = 0
-
-    while nave_y > screen_height // 2:
+    last_update_time = pygame.time.get_ticks()  # Tiempo de la última actualización del diálogo
+    dialog_interval = 3000  # Intervalo entre diálogos en milisegundos (3 segundos)
+    
+    while nave_y > screen_height // 2 or dialogo_index < len(dialogos):
         screen.fill((0, 0, 0))  # Fondo negro
         screen.blit(background, (0, 0))  # Fondo del espacio
-        nave_y -= nave_speed
+        
+        # Mover la nave hasta la mitad de la pantalla
+        if nave_y > screen_height // 2:
+            nave_y -= nave_speed
+            
         screen.blit(nave_img, (nave_x, nave_y))
 
         # Mostrar el diálogo actual
+        current_time = pygame.time.get_ticks()
         if dialogo_index < len(dialogos):
-            radio_sound.play()  # Reproducir el sonido de radio
-            time.sleep(0.5)  # Esperar medio segundo para simular la transmisión
-            dialogo_text = dialogo_font.render(dialogos[dialogo_index], True, (191, 255, 0))
-            dialogo_rect = dialogo_text.get_rect(center=(screen_width // 2, screen_height // 2))
-            screen.blit(dialogo_text, dialogo_rect)
+            if current_time - last_update_time >= dialog_interval:
+                last_update_time = current_time
+                dialogo_index += 1
+                if dialogo_index < len(dialogos):
+                    radio_sound.play()  # Reproducir el sonido de radio
+
+        # Renderizar el diálogo actual si hay uno activo
+        if dialogo_index > 0 and dialogo_index <= len(dialogos):
+            dialogo_text = dialogos[dialogo_index - 1]
+            rendered_text = dialogo_font.render(dialogo_text, True, (191, 255, 0))
+            text_rect = rendered_text.get_rect(center=(screen_width // 2, screen_height // 2))
+            screen.blit(rendered_text, text_rect)
+
+        # Mostrar el mensaje para saltar la cinemática
+        skip_text = dialogo_font.render("Press ENTER to skip", True, (255, 0, 0))
+        skip_rect = skip_text.get_rect(center=(screen_width // 2, screen_height - 30))
+        screen.blit(skip_text, skip_rect)
 
         pygame.display.update()
         clock.tick(60)
+        
+        # Comprobar si se presiona ENTER para saltar
+        skip_cinematic = False
+        for event in pygame.event.get():
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:
+                    skip_cinematic = True
+                    break
+            elif event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
 
-        # Avanzar al siguiente diálogo
-        if dialogo_index < len(dialogos):
-            time.sleep(2)  # Esperar 2 segundos antes de mostrar el siguiente diálogo
-            dialogo_index += 1
+        if skip_cinematic:
+            # Pasar directamente al juego
+            game_loop()
+            return
+
+    # Pausar brevemente para mostrar el último diálogo
+    pygame.time.wait(dialog_interval)
 
     # Detener la música de la cinemática
     pygame.mixer.music.stop()
     # Iniciar el juego
     game_loop()
+       
+def save_high_score(score):
+    with open("high_score.txt", "w") as file:
+        file.write(str(score))
 
+def load_high_score():
+    try:
+        with open("high_score.txt", "r") as file:
+            return int(file.read())
+    except (FileNotFoundError, ValueError):
+        return 0
+    
+high_score = load_high_score()
+
+
+def check_and_update_high_score(current_score):
+    global high_score
+    if current_score > high_score:
+        high_score = current_score
+        save_high_score(high_score)
+    
 def death_cinematic():
     global playerY
     pygame.mixer.music.stop()
@@ -713,7 +798,12 @@ def death_cinematic():
     # Llamar a la función de Game Over
     game_over_screen()
 
-       
+def check_and_update_high_score(current_score):
+    global high_score
+    if current_score > high_score:
+        high_score = current_score
+        save_high_score(high_score)
+      
 # Pantalla de Game Over
 def game_over_screen():
     # Cargar los sonidos
@@ -872,6 +962,7 @@ def game_loop():
                     explosion_sound.play()
                     vidas_jugador -= 1
                     if vidas_jugador <= 0:
+                        check_and_update_high_score(score)
                         for j in range(no_of_enemies):
                             enemyY[j] = 2000
                         # Llamada a la cinemática de muerte
